@@ -8,6 +8,11 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
 
+var appData = require('../data.json');
+var imgListData = appData.imgList;
+var bodyParser = require('body-parser');
+var timer = null;
+
 const devWebpackConfig = merge(baseWebpackConfig, {
   module: {
     rules: utils.styleLoaders({ sourceMap: config.dev.cssSourceMap, usePostCSS: true })
@@ -33,6 +38,42 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     quiet: true, // necessary for FriendlyErrorsPlugin
     watchOptions: {
       poll: config.dev.poll,
+    },
+    before (app) {
+      app.use(bodyParser.json({limit: '1mb'}));
+      app.use(bodyParser.urlencoded({
+        extended: true
+      }));
+      app.post('/api/imgList', function(req, res) {
+        // console.log(req.body);
+        var imageListData = imgListData;
+        var type = req.body.type || 0;
+        var pageSize = +req.body.pageSize || 10;
+        var pageNo = +req.body.pageNo || 0;
+        var count = pageSize * pageNo;
+        if (+type) {
+          var imgListArr = [];
+          imageListData.forEach((val) => {
+            if (val.type == type) {
+              imgListArr.push(val);
+            }
+          });
+          var imageListData = imgListArr;
+        }
+        var imgList = imageListData.slice(count, count + pageSize);
+        var isLast = imageListData.slice(count + pageSize + 1).length === 0;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          res.json({
+            code: '000000',
+            data: {
+              imgList: imgList,
+              isLast: isLast,
+              total: imageListData.length
+            }
+          });  
+        }, 1000);
+      });
     }
   },
   plugins: [

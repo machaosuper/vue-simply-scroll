@@ -3,6 +3,15 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import vueSimpleScroll from 'vue-simple-scroll';
+
+Vue.use(vueSimpleScroll);
+
+import './assets/reset.css';
+
+import axios from 'axios';
+// debugger;
+Vue.prototype.$http = axios;
 
 Vue.config.productionTip = false
 
